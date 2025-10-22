@@ -33,14 +33,14 @@ Cette liste de contrôle décrit les étapes nécessaires pour rendre le serveur
 
 ## 4. Routes API
 
-*   [ ] Créer `src/routes/index.js` pour consolider toutes les routes
-*   [ ] Définir les routes pour `Medecin` (par exemple, `/api/medecins`)
-*   [ ] Définir les routes pour `Donneur`
-*   [ ] Définir les routes pour `BanqueDeSang`
-*   [ ] Définir les routes pour `StockSang`
-*   [ ] Définir les routes pour `Demande`
-*   [ ] Définir les routes pour `Notification`
-*   [ ] Intégrer les routes dans `server.js`
+*   [x] Créer `src/routes/index.js` pour consolider toutes les routes
+*   [x] Définir les routes pour `Medecin` (par exemple, `/api/medecins`)
+*   [x] Définir les routes pour `Donneur`
+*   [x] Définir les routes pour `BanqueDeSang`
+*   [x] Définir les routes pour `StockSang`
+*   [x] Définir les routes pour `Demande`
+*   [x] Définir les routes pour `Notification`
+*   [x] Intégrer les routes dans `server.js`
 
 ## 5. Authentification et Autorisation
 
