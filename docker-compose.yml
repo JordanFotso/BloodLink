@@ -28,6 +28,7 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      API_BASE_URL: ${API_BASE_URL}
     depends_on:
       - db
     volumes:

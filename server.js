@@ -8,6 +8,9 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
+// API Routes
+app.use('/api', require('./src/routes'));
+
 app.get('/', (req, res) => {
   res.send('BloodLink API is running!');
 });
