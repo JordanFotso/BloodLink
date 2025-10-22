@@ -40,7 +40,7 @@ L'API fournit des opérations CRUD (Créer, Lire, Mettre à jour, Supprimer) com
 
 1.  **Cloner le dépôt :**
     ```bash
-    git clone https://github.com/JordanFotso/BloodLink.git
+    git clone -b dev https://github.com/JordanFotso/BloodLink.git
     cd bloodLink-backend-api
     ```
 
@@ -80,7 +80,7 @@ L'API fournit des opérations CRUD (Créer, Lire, Mettre à jour, Supprimer) com
 
 1.  **Cloner le dépôt :**
     ```bash
-    git clone https://github.com/JordanFotso/BloodLink.git
+    git clone -b dev https://github.com/JordanFotso/BloodLink.git
     cd bloodLink-backend-api
     ```
 
