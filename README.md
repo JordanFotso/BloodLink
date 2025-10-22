@@ -167,6 +167,20 @@ L'application utilise les variables d'environnement suivantes, généralement d�
 *   `JWT_REFRESH_SECRET` : Clé secrète pour la signature des jetons de rafraîchissement JWT.
 *   `GOOGLE_CLIENT_ID` : ID client Google OAuth pour l'authentification.
 
+## Utilisation du fichier TODO
+
+Le fichier `TODO.md` à la racine de ce répertoire contient une liste détaillée des tâches restantes pour rendre l'API backend entièrement opérationnelle. Il est structuré par catégories et chaque tâche est marquée avec :
+
+*   `[x]` si la tâche est **accomplie**.
+*   `[ ]` si la tâche est **en attente** ou **non commencée**.
+
+Ce fichier est destiné à aider les collaborateurs à :
+*   Comprendre l'état d'avancement du projet.
+*   Identifier les prochaines étapes et les priorités.
+*   Choisir une tâche à réaliser.
+
+Veuillez consulter ce fichier régulièrement pour vous tenir informé des progrès et des besoins du projet.
+
 ## Scripts
 
 *   `npm start` : Exécute l'application en mode développement.
