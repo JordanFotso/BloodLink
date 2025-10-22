@@ -1,30 +1,52 @@
+const bcrypt = require('bcryptjs');
 const { Medecin } = require('../models');
 
 const medecinController = {
   // Create a new Medecin
   async create(req, res) {
     try {
-      const medecin = await Medecin.create(req.body);
+      const { nom, email, mot_de_passe } = req.body;
+      const hashedPassword = await bcrypt.hash(mot_de_passe, 10);
+      const medecin = await Medecin.create({ nom, email, mot_de_passe: hashedPassword });
       return res.status(201).json(medecin);
     } catch (error) {
       return res.status(400).json({ error: error.message });
     }
   },
 
-  // Get all Medecins
-  async getAll(req, res) {
+  // Update a Medecin by ID
+  async update(req, res) {
     try {
-      const medecins = await Medecin.findAll();
-      return res.status(200).json(medecins);
+      const { mot_de_passe, ...otherUpdates } = req.body;
+      let updateData = { ...otherUpdates };
+
+      if (mot_de_passe) {
+        updateData.mot_de_passe = await bcrypt.hash(mot_de_passe, 10);
+      }
+
+      const [updated] = await Medecin.update(updateData, {
+        where: { id: req.params.id },
+        individualHooks: true, // If you have beforeUpdate hooks in model
+      });
+      if (updated) {
+        const updatedMedecin = await Medecin.findByPk(req.params.id, {
+          attributes: { exclude: ['mot_de_passe'] },
+        });
+        return res.status(200).json(updatedMedecin);
+      } else {
+        return res.status(404).json({ error: 'Medecin not found' });
+      }
     } catch (error) {
-      return res.status(500).json({ error: error.message });
+      return res.status(400).json({ error: error.message });
     }
   },
 
   // Get a single Medecin by ID
   async getById(req, res) {
     try {
-      const medecin = await Medecin.findByPk(req.params.id);
+      const medecin = await Medecin.findByPk(req.params.id, {
+        attributes: { exclude: ['mot_de_passe'] },
+      });
       if (medecin) {
         return res.status(200).json(medecin);
       } else {
@@ -35,20 +57,15 @@ const medecinController = {
     }
   },
 
-  // Update a Medecin by ID
-  async update(req, res) {
+  // Get all Medecins
+  async getAll(req, res) {
     try {
-      const [updated] = await Medecin.update(req.body, {
-        where: { id: req.params.id },
+      const medecins = await Medecin.findAll({
+        attributes: { exclude: ['mot_de_passe'] },
       });
-      if (updated) {
-        const updatedMedecin = await Medecin.findByPk(req.params.id);
-        return res.status(200).json(updatedMedecin);
-      } else {
-        return res.status(404).json({ error: 'Medecin not found' });
-      }
+      return res.status(200).json(medecins);
     } catch (error) {
-      return res.status(400).json({ error: error.message });
+      return res.status(500).json({ error: error.message });
     }
   },
 
