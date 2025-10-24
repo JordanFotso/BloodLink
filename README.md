@@ -105,6 +105,31 @@ L'API fournit des opérations CRUD (Créer, Lire, Mettre à jour, Supprimer) com
     ```
     Cela construira l'image de l'application Node.js, démarrera le conteneur PostgreSQL et exécutera le serveur API. L'API sera accessible à l'adresse `http://localhost:3000`.
 
+### Commandes Docker utiles
+
+*   **Démarrer les services en arrière-plan :**
+    ```bash
+    docker-compose up -d
+    ```
+
+*   **Voir les logs de l'application en temps réel :**
+    ```bash
+    docker-compose logs -f app
+    ```
+
+*   **Arrêter les services :**
+    ```bash
+    docker-compose down
+    ```
+
+*   **Accéder à la base de données :**
+    Aucune interface web pour la base de données n'est fournie par défaut. Vous pouvez vous connecter à la base de données PostgreSQL en utilisant un outil graphique comme DBeaver, pgAdmin, ou via la ligne de commande.
+    *   **Hôte :** `localhost`
+    *   **Port :** `5433`
+    *   **Base de données :** `bloodlink_db`
+    *   **Utilisateur :** `user`
+    *   **Mot de passe :** `password`
+
 ## Points d'Accès API (Endpoints)
 
 *(Note : Les routes ne sont pas encore définies dans `src/routes/`. Cette section sera mise à jour une fois les routes implémentées.)*

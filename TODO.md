@@ -62,8 +62,8 @@ Cette liste de contrôle décrit les étapes nécessaires pour rendre le serveur
 ## 8. Tests
 
 *   [ ] Écrire des tests unitaires pour les modèles
-*   [ ] Écrire des tests unitaires pour les contrôleurs
-*   [ ] Écrire des tests d'intégration pour les points d'accès API
+*   [x] Écrire des tests unitaires pour les contrôleurs
+*   [x] Écrire des tests d'intégration pour les points d'accès API
 
 ## 9. Déploiement
 
