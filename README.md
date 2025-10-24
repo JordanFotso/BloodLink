@@ -130,6 +130,11 @@ L'API fournit des opérations CRUD (Créer, Lire, Mettre à jour, Supprimer) com
     *   **Utilisateur :** `user`
     *   **Mot de passe :** `password`
 
+*   **Lancer les tests :**
+    ```bash
+    docker-compose exec app npm test
+    ```
+
 ## Points d'Accès API (Endpoints)
 
 *(Note : Les routes ne sont pas encore définies dans `src/routes/`. Cette section sera mise à jour une fois les routes implémentées.)*
