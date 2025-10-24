@@ -7,8 +7,12 @@ const { sequelize } = require('./src/models');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const routes = require('./src/routes');
+
 app.use(cors());
 app.use(express.json());
+
+app.use('/api', routes);
 
 // Sync Sequelize models and start the server
 sequelize.sync({ force: false }).then(() => {
