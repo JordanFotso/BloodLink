@@ -6,11 +6,11 @@ const env = process.env.NODE_ENV || 'development';
 const config = require(__dirname + '/../config/config.json')[env];
 const db = {};
 
-let sequelize;
+let sequelizeInstance;
 if (config.use_env_variable) {
-  sequelize = new Sequelize(process.env[config.use_env_variable], config);
+  sequelizeInstance = new Sequelize(process.env[config.use_env_variable], config);
 } else {
-  sequelize = new Sequelize(
+  sequelizeInstance = new Sequelize(
     process.env.DB_NAME || config.database,
     process.env.DB_USER || config.username,
     process.env.DB_PASSWORD || config.password,
@@ -29,7 +29,7 @@ fs
     return (file.indexOf('.') !== 0) && (file !== basename) && (file.slice(-3) === '.js');
   })
   .forEach(file => {
-    const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes);
+    const model = require(path.join(__dirname, file))(sequelizeInstance, Sequelize.DataTypes);
     db[model.name] = model;
   });
 
@@ -39,20 +39,7 @@ Object.keys(db).forEach(modelName => {
   }
 });
 
-db.sequelize = sequelize;
+db.sequelize = sequelizeInstance;
 db.Sequelize = Sequelize;
-
-// Define associations
-db.BanqueDeSang.hasMany(db.StockSang, { foreignKey: 'id_banque' });
-db.StockSang.belongsTo(db.BanqueDeSang, { foreignKey: 'id_banque' });
-
-db.Medecin.hasMany(db.Demande, { foreignKey: 'id_medecin' });
-db.Demande.belongsTo(db.Medecin, { foreignKey: 'id_medecin' });
-
-db.Donneur.hasMany(db.Notification, { foreignKey: 'id_donneur' });
-db.Notification.belongsTo(db.Donneur, { foreignKey: 'id_donneur' });
-
-db.Demande.hasMany(db.Notification, { foreignKey: 'id_demande' });
-db.Notification.belongsTo(db.Demande, { foreignKey: 'id_demande' });
 
 module.exports = db;

@@ -2,7 +2,7 @@
 const request = require('supertest');
 const express = require('express');
 const demandeRoutes = require('../src/routes/demandeRoutes');
-const { Demande } = require('../src/models');
+const { Demande, Medecin } = require('../src/models');
 
 const app = express();
 app.use(express.json());
@@ -16,6 +16,7 @@ jest.mock('../src/models', () => ({
     update: jest.fn(),
     destroy: jest.fn(),
   },
+  Medecin: {},
 }));
 
 describe('Demande API Integration Tests', () => {
@@ -81,7 +82,7 @@ describe('Demande API Integration Tests', () => {
 
       expect(res.statusCode).toEqual(200);
       expect(res.body).toEqual(demande);
-      expect(Demande.findByPk).toHaveBeenCalledWith(1);
+      expect(Demande.findByPk).toHaveBeenCalledWith(1, { include: [{ model: Medecin }] });
     });
 
     it('should return 404 if demande not found', async () => {

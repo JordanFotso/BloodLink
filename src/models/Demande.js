@@ -11,7 +11,7 @@ module.exports = (sequelize) => {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'Medecin',
+        model: 'medecins',
         key: 'id',
       },
     },
@@ -35,6 +35,11 @@ module.exports = (sequelize) => {
     tableName: 'demandes',
     timestamps: false,
   });
+
+  Demande.associate = (models) => {
+    Demande.belongsTo(models.Medecin, { foreignKey: 'id_medecin' });
+    Demande.hasMany(models.Notification, { foreignKey: 'id_demande' });
+  };
 
   return Demande;
 };

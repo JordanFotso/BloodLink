@@ -26,7 +26,7 @@ const stockSangController = {
   // Get a single StockSang by ID, optionally with associated BanqueDeSang
   async getById(req, res) {
     try {
-      const stockSang = await StockSang.findByPk(req.params.id, {
+      const stockSang = await StockSang.findByPk(parseInt(req.params.id, 10), {
         include: [{ model: BanqueDeSang }],
       });
       if (stockSang) {
@@ -43,10 +43,10 @@ const stockSangController = {
   async update(req, res) {
     try {
       const [updated] = await StockSang.update(req.body, {
-        where: { id: req.params.id },
+        where: { id: parseInt(req.params.id, 10) },
       });
       if (updated) {
-        const updatedStockSang = await StockSang.findByPk(req.params.id);
+        const updatedStockSang = await StockSang.findByPk(parseInt(req.params.id, 10));
         return res.status(200).json(updatedStockSang);
       } else {
         return res.status(404).json({ error: 'StockSang not found' });
@@ -60,7 +60,7 @@ const stockSangController = {
   async delete(req, res) {
     try {
       const deleted = await StockSang.destroy({
-        where: { id: req.params.id },
+        where: { id: parseInt(req.params.id, 10) },
       });
       if (deleted) {
         return res.status(204).send();

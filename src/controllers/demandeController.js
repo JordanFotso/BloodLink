@@ -26,7 +26,7 @@ const demandeController = {
   // Get a single Demande by ID, optionally with associated Medecin
   async getById(req, res) {
     try {
-      const demande = await Demande.findByPk(req.params.id, {
+      const demande = await Demande.findByPk(parseInt(req.params.id, 10), {
         include: [{ model: Medecin }],
       });
       if (demande) {
@@ -43,10 +43,10 @@ const demandeController = {
   async update(req, res) {
     try {
       const [updated] = await Demande.update(req.body, {
-        where: { id: req.params.id },
+        where: { id: parseInt(req.params.id, 10) },
       });
       if (updated) {
-        const updatedDemande = await Demande.findByPk(req.params.id);
+        const updatedDemande = await Demande.findByPk(parseInt(req.params.id, 10));
         return res.status(200).json(updatedDemande);
       } else {
         return res.status(404).json({ error: 'Demande not found' });
@@ -60,7 +60,7 @@ const demandeController = {
   async delete(req, res) {
     try {
       const deleted = await Demande.destroy({
-        where: { id: req.params.id },
+        where: { id: parseInt(req.params.id, 10) },
       });
       if (deleted) {
         return res.status(204).send();

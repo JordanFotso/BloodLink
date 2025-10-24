@@ -25,5 +25,9 @@ module.exports = (sequelize) => {
     timestamps: false,
   });
 
+  Medecin.associate = (models) => {
+    Medecin.hasMany(models.Demande, { foreignKey: 'id_medecin' });
+  };
+
   return Medecin;
 };

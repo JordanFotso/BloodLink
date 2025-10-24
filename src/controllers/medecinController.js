@@ -25,11 +25,11 @@ const medecinController = {
       }
 
       const [updated] = await Medecin.update(updateData, {
-        where: { id: req.params.id },
+        where: { id: parseInt(req.params.id, 10) },
         individualHooks: true, // If you have beforeUpdate hooks in model
       });
       if (updated) {
-        const updatedMedecin = await Medecin.findByPk(req.params.id, {
+        const updatedMedecin = await Medecin.findByPk(parseInt(req.params.id, 10), {
           attributes: { exclude: ['mot_de_passe'] },
         });
         return res.status(200).json(updatedMedecin);
@@ -44,7 +44,7 @@ const medecinController = {
   // Get a single Medecin by ID
   async getById(req, res) {
     try {
-      const medecin = await Medecin.findByPk(req.params.id, {
+      const medecin = await Medecin.findByPk(parseInt(req.params.id, 10), {
         attributes: { exclude: ['mot_de_passe'] },
       });
       if (medecin) {
@@ -73,7 +73,7 @@ const medecinController = {
   async delete(req, res) {
     try {
       const deleted = await Medecin.destroy({
-        where: { id: req.params.id },
+        where: { id: parseInt(req.params.id, 10) },
       });
       if (deleted) {
         return res.status(204).send();

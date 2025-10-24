@@ -24,7 +24,7 @@ const donneurController = {
   // Get a single Donneur by ID
   async getById(req, res) {
     try {
-      const donneur = await Donneur.findByPk(req.params.id);
+      const donneur = await Donneur.findByPk(parseInt(req.params.id, 10));
       if (donneur) {
         return res.status(200).json(donneur);
       } else {
@@ -39,10 +39,10 @@ const donneurController = {
   async update(req, res) {
     try {
       const [updated] = await Donneur.update(req.body, {
-        where: { id: req.params.id },
+        where: { id: parseInt(req.params.id, 10) },
       });
       if (updated) {
-        const updatedDonneur = await Donneur.findByPk(req.params.id);
+        const updatedDonneur = await Donneur.findByPk(parseInt(req.params.id, 10));
         return res.status(200).json(updatedDonneur);
       } else {
         return res.status(404).json({ error: 'Donneur not found' });
@@ -56,7 +56,7 @@ const donneurController = {
   async delete(req, res) {
     try {
       const deleted = await Donneur.destroy({
-        where: { id: req.params.id },
+        where: { id: parseInt(req.params.id, 10) },
       });
       if (deleted) {
         return res.status(204).send();

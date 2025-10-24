@@ -24,5 +24,9 @@ module.exports = (sequelize) => {
     timestamps: false,
   });
 
+  Donneur.associate = (models) => {
+    Donneur.hasMany(models.Notification, { foreignKey: 'id_donneur' });
+  };
+
   return Donneur;
 };

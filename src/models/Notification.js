@@ -11,7 +11,7 @@ module.exports = (sequelize) => {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'Donneur',
+        model: 'donneurs',
         key: 'id',
       },
     },
@@ -19,7 +19,7 @@ module.exports = (sequelize) => {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'Demande',
+        model: 'demandes',
         key: 'id',
       },
     },
@@ -31,6 +31,11 @@ module.exports = (sequelize) => {
     tableName: 'notifications',
     timestamps: false,
   });
+
+  Notification.associate = (models) => {
+    Notification.belongsTo(models.Donneur, { foreignKey: 'id_donneur' });
+    Notification.belongsTo(models.Demande, { foreignKey: 'id_demande' });
+  };
 
   return Notification;
 };

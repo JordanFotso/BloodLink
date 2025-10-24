@@ -24,5 +24,9 @@ module.exports = (sequelize) => {
     timestamps: false,
   });
 
+  BanqueDeSang.associate = (models) => {
+    BanqueDeSang.hasMany(models.StockSang, { foreignKey: 'id_banque' });
+  };
+
   return BanqueDeSang;
 };

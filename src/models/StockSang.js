@@ -11,7 +11,7 @@ module.exports = (sequelize) => {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'BanqueDeSang',
+        model: 'banques_de_sang',
         key: 'id',
       },
     },
@@ -27,6 +27,10 @@ module.exports = (sequelize) => {
     tableName: 'stock_sang',
     timestamps: false,
   });
+
+  StockSang.associate = (models) => {
+    StockSang.belongsTo(models.BanqueDeSang, { foreignKey: 'id_banque' });
+  };
 
   return StockSang;
 };

@@ -1,6 +1,6 @@
 
 const demandeController = require('../src/controllers/demandeController');
-const { Demande } = require('../src/models');
+const { Demande, Medecin } = require('../src/models');
 
 jest.mock('../src/models', () => ({
   Demande: {
@@ -10,6 +10,7 @@ jest.mock('../src/models', () => ({
     update: jest.fn(),
     destroy: jest.fn(),
   },
+  Medecin: {},
 }));
 
 describe('DemandeController', () => {
@@ -87,7 +88,7 @@ describe('DemandeController', () => {
 
         await demandeController.getById(req, res);
 
-        expect(Demande.findByPk).toHaveBeenCalledWith(1);
+        expect(Demande.findByPk).toHaveBeenCalledWith(1, { include: [{ model: Medecin }] });
         expect(res.status).toHaveBeenCalledWith(200);
         expect(res.json).toHaveBeenCalledWith(demande);
     });

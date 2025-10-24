@@ -24,7 +24,7 @@ const banqueDeSangController = {
   // Get a single BanqueDeSang by ID
   async getById(req, res) {
     try {
-      const banqueDeSang = await BanqueDeSang.findByPk(req.params.id);
+      const banqueDeSang = await BanqueDeSang.findByPk(parseInt(req.params.id, 10));
       if (banqueDeSang) {
         return res.status(200).json(banqueDeSang);
       } else {
@@ -39,10 +39,10 @@ const banqueDeSangController = {
   async update(req, res) {
     try {
       const [updated] = await BanqueDeSang.update(req.body, {
-        where: { id: req.params.id },
+        where: { id: parseInt(req.params.id, 10) },
       });
       if (updated) {
-        const updatedBanqueDeSang = await BanqueDeSang.findByPk(req.params.id);
+        const updatedBanqueDeSang = await BanqueDeSang.findByPk(parseInt(req.params.id, 10));
         return res.status(200).json(updatedBanqueDeSang);
       } else {
         return res.status(404).json({ error: 'BanqueDeSang not found' });
@@ -56,7 +56,7 @@ const banqueDeSangController = {
   async delete(req, res) {
     try {
       const deleted = await BanqueDeSang.destroy({
-        where: { id: req.params.id },
+        where: { id: parseInt(req.params.id, 10) },
       });
       if (deleted) {
         return res.status(204).send();
