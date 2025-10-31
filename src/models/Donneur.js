@@ -11,6 +11,15 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING,
       allowNull: false,
     },
+    email: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+    },
+    mot_de_passe: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
     groupe_sanguin: {
       type: DataTypes.STRING,
       allowNull: false,

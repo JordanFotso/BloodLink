@@ -1,11 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const demandeController = require('../controllers/demandeController');
+const { protect, authorize } = require('../middlewares/authMiddleware');
 
-router.post('/', demandeController.create);
-router.get('/', demandeController.getAll);
-router.get('/:id', demandeController.getById);
-router.put('/:id', demandeController.update);
-router.delete('/:id', demandeController.delete);
+// Seul un médecin peut créer, mettre à jour ou supprimer une demande.
+router.post('/', protect, authorize('medecin'), demandeController.create);
+router.put('/:id', protect, authorize('medecin'), demandeController.update);
+router.delete('/:id', protect, authorize('medecin'), demandeController.delete);
+
+// Tout utilisateur connecté (médecin ou donneur) peut voir les demandes.
+router.get('/', protect, demandeController.getAll);
+router.get('/:id', protect, demandeController.getById);
 
 module.exports = router;
