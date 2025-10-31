@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
-    "test": "./node_modules/.bin/jest",
+    "test": "DB_USER=user DB_PASSWORD=password DB_NAME=bloodlink_db DB_HOST=localhost DB_PORT=5433 ./node_modules/.bin/jest",
     "test:integration": "jest --config jest.config.js",
     "start": "node server.js"
   },

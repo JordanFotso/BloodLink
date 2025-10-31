@@ -12,6 +12,7 @@
     "password": "${DB_PASSWORD}",
     "database": "${DB_NAME}_test",
     "host": "${DB_HOST}",
+    "port": "${DB_PORT}",
     "dialect": "postgres",
     "jwt_secret": "${JWT_SECRET}"
   },

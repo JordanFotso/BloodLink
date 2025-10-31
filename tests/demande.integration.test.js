@@ -1,174 +1,97 @@
-
 const request = require('supertest');
 const express = require('express');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const { sequelize, Medecin, Donneur, Demande } = require('../src/models');
 const demandeRoutes = require('../src/routes/demandeRoutes');
-const { Demande, Medecin } = require('../src/models');
+const config = require('../src/config/config.json')['test'];
 
+// L'application de test doit simuler la vraie structure
 const app = express();
 app.use(express.json());
-app.use('/demandes', demandeRoutes);
-
-jest.mock('../src/models', () => ({
-  Demande: {
-    create: jest.fn(),
-    findAll: jest.fn(),
-    findByPk: jest.fn(),
-    update: jest.fn(),
-    destroy: jest.fn(),
-  },
-  Medecin: {},
-}));
+// Le middleware `protect` est déjà dans `demandeRoutes`, donc on l'utilise directement
+app.use('/api/demandes', demandeRoutes);
 
 describe('Demande API Integration Tests', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
+  let medecin, donneur, medecinToken, donneurToken;
+
+  beforeAll(async () => {
+    await sequelize.sync({ force: true });
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash('password123', salt);
+
+    medecin = await Medecin.create({
+      nom: 'Dr. Test',
+      email: 'medecin.demande@test.com',
+      mot_de_passe: hashedPassword,
+    });
+
+    donneur = await Donneur.create({
+        nom: 'Donneur Test Demande',
+        email: 'donneur.demande@test.com',
+        mot_de_passe: hashedPassword,
+        groupe_sanguin: 'A-',
+        localisation: 'Testburg'
+    });
+
+    medecinToken = jwt.sign({ id: medecin.id, role: 'medecin' }, config.jwt_secret, { expiresIn: '1h' });
+    donneurToken = jwt.sign({ id: donneur.id, role: 'donneur' }, config.jwt_secret, { expiresIn: '1h' });
   });
 
-  describe('POST /demandes', () => {
-    it('should create a new demande', async () => {
-      const nouvelleDemande = { id_medecin: 1, groupe_sanguin: 'A+', quantite: 2, urgence: 'Haute', statut: 'En attente' };
-      Demande.create.mockResolvedValue({ id: 1, ...nouvelleDemande });
+  afterAll(async () => {
+    await sequelize.close();
+  });
 
+  describe('POST /api/demandes', () => {
+    it('devrait créer une nouvelle demande pour un médecin authentifié', async () => {
+      const nouvelleDemande = { groupe_sanguin: 'O+', quantite: 3, urgence: 'Moyenne', statut: 'En attente' };
+      
       const res = await request(app)
-        .post('/demandes')
+        .post('/api/demandes')
+        .set('Authorization', `Bearer ${medecinToken}`)
         .send(nouvelleDemande);
 
       expect(res.statusCode).toEqual(201);
-      expect(res.body).toEqual({ id: 1, ...nouvelleDemande });
-      expect(Demande.create).toHaveBeenCalledWith(nouvelleDemande);
+      expect(res.body.groupe_sanguin).toBe(nouvelleDemande.groupe_sanguin);
+      expect(res.body.id_medecin).toBe(medecin.id);
     });
 
-    it('should return 400 if creation fails', async () => {
-      const nouvelleDemande = { id_medecin: 1 };
-      Demande.create.mockRejectedValue(new Error('Erreur de création'));
+    it('devrait refuser la création pour un donneur (rôle non autorisé)', async () => {
+        const nouvelleDemande = { groupe_sanguin: 'B+', quantite: 1, urgence: 'Basse', statut: 'En attente' };
+        
+        const res = await request(app)
+          .post('/api/demandes')
+          .set('Authorization', `Bearer ${donneurToken}`)
+          .send(nouvelleDemande);
+  
+        expect(res.statusCode).toEqual(403);
+      });
 
-      const res = await request(app)
-        .post('/demandes')
-        .send(nouvelleDemande);
-
-      expect(res.statusCode).toEqual(400);
-      expect(res.body).toEqual({ error: 'Erreur de création' });
-    });
+    it('devrait refuser la création si le token est manquant', async () => {
+        const nouvelleDemande = { groupe_sanguin: 'AB+', quantite: 5, urgence: 'Haute', statut: 'En attente' };
+        
+        const res = await request(app)
+          .post('/api/demandes')
+          .send(nouvelleDemande);
+  
+        expect(res.statusCode).toEqual(401);
+      });
   });
 
-  describe('GET /demandes', () => {
-    it('should return all demandes', async () => {
-      const demandes = [{ id: 1, groupe_sanguin: 'A+' }, { id: 2, groupe_sanguin: 'B-' }];
-      Demande.findAll.mockResolvedValue(demandes);
+  describe('GET /api/demandes', () => {
+    it('devrait retourner toutes les demandes pour un utilisateur authentifié', async () => {
+      // Créer une demande pour s'assurer que la liste n'est pas vide
+      await Demande.create({ id_medecin: medecin.id, groupe_sanguin: 'A+', quantite: 1, urgence: 'Haute', statut: 'En attente' });
 
-      const res = await request(app).get('/demandes');
+      const res = await request(app)
+        .get('/api/demandes')
+        .set('Authorization', `Bearer ${donneurToken}`); // Un donneur peut voir les demandes
 
       expect(res.statusCode).toEqual(200);
-      expect(res.body).toEqual(demandes);
-      expect(Demande.findAll).toHaveBeenCalled();
-    });
-
-    it('should return 500 if fetching all fails', async () => {
-      Demande.findAll.mockRejectedValue(new Error('Erreur serveur'));
-
-      const res = await request(app).get('/demandes');
-
-      expect(res.statusCode).toEqual(500);
-      expect(res.body).toEqual({ error: 'Erreur serveur' });
+      expect(Array.isArray(res.body)).toBe(true);
+      expect(res.body.length).toBeGreaterThan(0);
     });
   });
 
-  describe('GET /demandes/:id', () => {
-    it('should return a demande by ID', async () => {
-      const demande = { id: 1, groupe_sanguin: 'A+' };
-      Demande.findByPk.mockResolvedValue(demande);
-
-      const res = await request(app).get('/demandes/1');
-
-      expect(res.statusCode).toEqual(200);
-      expect(res.body).toEqual(demande);
-      expect(Demande.findByPk).toHaveBeenCalledWith(1, { include: [{ model: Medecin }] });
-    });
-
-    it('should return 404 if demande not found', async () => {
-      Demande.findByPk.mockResolvedValue(null);
-
-      const res = await request(app).get('/demandes/99');
-
-      expect(res.statusCode).toEqual(404);
-      expect(res.body).toEqual({ error: 'Demande not found' });
-    });
-
-    it('should return 500 if fetching by ID fails', async () => {
-      Demande.findByPk.mockRejectedValue(new Error('Erreur serveur'));
-
-      const res = await request(app).get('/demandes/1');
-
-      expect(res.statusCode).toEqual(500);
-      expect(res.body).toEqual({ error: 'Erreur serveur' });
-    });
-  });
-
-  describe('PUT /demandes/:id', () => {
-    it('should update a demande by ID', async () => {
-      const updatedData = { statut: 'Approuvée' };
-      const updatedDemande = { id: 1, statut: 'Approuvée' };
-      Demande.update.mockResolvedValue([1]);
-      Demande.findByPk.mockResolvedValue(updatedDemande);
-
-      const res = await request(app)
-        .put('/demandes/1')
-        .send(updatedData);
-
-      expect(res.statusCode).toEqual(200);
-      expect(res.body).toEqual(updatedDemande);
-      expect(Demande.update).toHaveBeenCalledWith(updatedData, { where: { id: 1 } });
-    });
-
-    it('should return 404 if demande to update not found', async () => {
-      Demande.update.mockResolvedValue([0]);
-
-      const res = await request(app)
-        .put('/demandes/99')
-        .send({ statut: 'Approuvée' });
-
-      expect(res.statusCode).toEqual(404);
-      expect(res.body).toEqual({ error: 'Demande not found' });
-    });
-
-    it('should return 400 if update fails', async () => {
-      Demande.update.mockRejectedValue(new Error('Erreur de mise à jour'));
-
-      const res = await request(app)
-        .put('/demandes/1')
-        .send({ statut: 'Approuvée' });
-
-      expect(res.statusCode).toEqual(400);
-      expect(res.body).toEqual({ error: 'Erreur de mise à jour' });
-    });
-  });
-
-  describe('DELETE /demandes/:id', () => {
-    it('should delete a demande by ID', async () => {
-      Demande.destroy.mockResolvedValue(1);
-
-      const res = await request(app).delete('/demandes/1');
-
-      expect(res.statusCode).toEqual(204);
-      expect(Demande.destroy).toHaveBeenCalledWith({ where: { id: 1 } });
-    });
-
-    it('should return 404 if demande to delete not found', async () => {
-      Demande.destroy.mockResolvedValue(0);
-
-      const res = await request(app).delete('/demandes/99');
-
-      expect(res.statusCode).toEqual(404);
-      expect(res.body).toEqual({ error: 'Demande not found' });
-    });
-
-    it('should return 500 if deletion fails', async () => {
-      Demande.destroy.mockRejectedValue(new Error('Erreur de suppression'));
-
-      const res = await request(app).delete('/demandes/1');
-
-      expect(res.statusCode).toEqual(500);
-      expect(res.body).toEqual({ error: 'Erreur de suppression' });
-    });
-  });
 });

@@ -1,4 +1,3 @@
-
 const demandeController = require('../src/controllers/demandeController');
 const { Demande, Medecin } = require('../src/models');
 
@@ -34,20 +33,26 @@ describe('DemandeController', () => {
 
   describe('create', () => {
     it('should create a new demande and return 201', async () => {
-      const nouvelleDemande = { id: 1, id_medecin: 1, groupe_sanguin: 'A+', quantite: 2, urgence: 'Haute', statut: 'En attente' };
-      req.body = nouvelleDemande;
-      Demande.create.mockResolvedValue(nouvelleDemande);
+      const demandeData = { groupe_sanguin: 'A+', quantite: 2, urgence: 'Haute', statut: 'En attente' };
+      const medecinId = 1;
+      req.body = demandeData;
+      req.user = { id: medecinId }; // Simuler l'utilisateur authentifié
+
+      const createdDemande = { id: 1, ...demandeData, id_medecin: medecinId };
+      Demande.create.mockResolvedValue(createdDemande);
 
       await demandeController.create(req, res);
 
-      expect(Demande.create).toHaveBeenCalledWith(nouvelleDemande);
+      // Vérifier que l'ID du médecin vient de req.user
+      expect(Demande.create).toHaveBeenCalledWith({ ...demandeData, id_medecin: medecinId });
       expect(res.status).toHaveBeenCalledWith(201);
-      expect(res.json).toHaveBeenCalledWith(nouvelleDemande);
+      expect(res.json).toHaveBeenCalledWith(createdDemande);
     });
 
     it('should return 400 on error', async () => {
       const errorMessage = 'Erreur de création';
-      req.body = { id_medecin: 1 };
+      req.body = { groupe_sanguin: 'A+' };
+      req.user = { id: 1 }; // Simuler l'utilisateur authentifié
       Demande.create.mockRejectedValue(new Error(errorMessage));
 
       await demandeController.create(req, res);
