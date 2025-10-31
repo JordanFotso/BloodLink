@@ -10,6 +10,57 @@ const generateToken = (id, role) => {
   });
 };
 
+// Contrôleur d'inscription
+exports.signup = async (req, res) => {
+  const { nom, email, password, role, ...otherFields } = req.body;
+
+  // 1. Validation simple
+  if (!nom || !email || !password || !role) {
+    return res.status(400).json({ message: 'Nom, email, mot de passe et rôle sont requis.' });
+  }
+  if (role !== 'medecin' && role !== 'donneur') {
+    return res.status(400).json({ message: 'Le rôle doit être "medecin" ou "donneur".' });
+  }
+
+  try {
+    // 2. Vérifier si l'utilisateur existe déjà (dans l'une ou l'autre table)
+    const medecinExists = await Medecin.findOne({ where: { email } });
+    const donneurExists = await Donneur.findOne({ where: { email } });
+    if (medecinExists || donneurExists) {
+      return res.status(400).json({ message: 'Un utilisateur avec cet email existe déjà.' });
+    }
+
+    // 3. Hacher le mot de passe
+    const salt = await bcrypt.genSalt(10);
+    const mot_de_passe = await bcrypt.hash(password, salt);
+
+    let newUser;
+    // 4. Créer le nouvel utilisateur en fonction du rôle
+    if (role === 'medecin') {
+      newUser = await Medecin.create({ nom, email, mot_de_passe });
+    } else {
+      // Valider les champs spécifiques au donneur
+      const { groupe_sanguin, localisation } = otherFields;
+      if (!groupe_sanguin || !localisation) {
+        return res.status(400).json({ message: 'Groupe sanguin et localisation sont requis pour un donneur.' });
+      }
+      newUser = await Donneur.create({ nom, email, mot_de_passe, groupe_sanguin, localisation });
+    }
+
+    // 5. Générer un token et le renvoyer (connexion automatique)
+    const token = generateToken(newUser.id, role);
+
+    res.status(201).json({
+      success: true,
+      token: `Bearer ${token}`,
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Erreur du serveur.' });
+  }
+};
+
 // Contrôleur de connexion
 exports.login = async (req, res) => {
   const { email, password, role } = req.body;

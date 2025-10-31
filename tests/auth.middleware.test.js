@@ -23,7 +23,11 @@ app.get('/api/test/any-user', protect, (req, res) => {
   res.status(200).json({ success: true, user: req.user });
 });
 
-describe('Auth Middleware', () => {
+// Ajout de la route de signup à l'app de test
+const authRoutes = require('../src/routes/authRoutes');
+app.use('/api/auth', authRoutes);
+
+describe('Auth Endpoints', () => {
   let medecin, donneur, medecinToken, donneurToken;
 
   beforeAll(async () => {
@@ -54,7 +58,69 @@ describe('Auth Middleware', () => {
     await sequelize.close();
   });
 
-  describe('protect middleware', () => {
+  describe('POST /api/auth/signup', () => {
+    it('devrait inscrire un nouveau médecin et retourner un token', async () => {
+      const res = await request(app)
+        .post('/api/auth/signup')
+        .send({
+          nom: 'Nouveau Medecin',
+          email: 'nouveau.medecin@test.com',
+          password: 'newpassword123',
+          role: 'medecin'
+        });
+      
+      expect(res.statusCode).toBe(201);
+      expect(res.body.success).toBe(true);
+      expect(res.body.token).toMatch(/^Bearer\s[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$/);
+    });
+
+    it('devrait inscrire un nouveau donneur et retourner un token', async () => {
+        const res = await request(app)
+          .post('/api/auth/signup')
+          .send({
+            nom: 'Nouveau Donneur',
+            email: 'nouveau.donneur@test.com',
+            password: 'newpassword123',
+            role: 'donneur',
+            groupe_sanguin: 'AB+',
+            localisation: 'Neocity'
+          });
+        
+        expect(res.statusCode).toBe(201);
+        expect(res.body.success).toBe(true);
+        expect(res.body.token).toBeDefined();
+      });
+
+    it('devrait retourner une erreur 400 si l\'email existe déjà', async () => {
+        const res = await request(app)
+          .post('/api/auth/signup')
+          .send({
+            nom: 'Autre Medecin',
+            email: 'medecin@test.com', // Email déjà utilisé
+            password: 'password123',
+            role: 'medecin'
+          });
+
+        expect(res.statusCode).toBe(400);
+        expect(res.body.message).toBe('Un utilisateur avec cet email existe déjà.');
+    });
+
+    it('devrait retourner une erreur 400 si un champ est manquant', async () => {
+        const res = await request(app)
+          .post('/api/auth/signup')
+          .send({
+            nom: 'Incomplet',
+            email: 'incomplet@test.com',
+            // Mot de passe manquant
+            role: 'medecin'
+          });
+
+        expect(res.statusCode).toBe(400);
+        expect(res.body.message).toBe('Nom, email, mot de passe et rôle sont requis.');
+    });
+  });
+
+  describe('Auth Middleware', () => {
     it('devrait autoriser l\'accès avec un token valide', async () => {
       const res = await request(app)
         .get('/api/test/any-user')
