@@ -10,6 +10,10 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
+// Routes
+const routes = require('./src/routes');
+app.use('/api', routes);
+
 // Sync Sequelize models and start the server
 sequelize.sync({ force: false }).then(() => {
   app.listen(PORT, () => {

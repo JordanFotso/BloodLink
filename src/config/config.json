@@ -4,20 +4,23 @@
     "password": "${DB_PASSWORD}",
     "database": "${DB_NAME}",
     "host": "${DB_HOST}",
-    "dialect": "postgres"
+    "dialect": "postgres",
+    "jwt_secret": "${JWT_SECRET}"
   },
   "test": {
     "username": "${DB_USER}",
     "password": "${DB_PASSWORD}",
     "database": "${DB_NAME}_test",
     "host": "${DB_HOST}",
-    "dialect": "postgres"
+    "dialect": "postgres",
+    "jwt_secret": "${JWT_SECRET}"
   },
   "production": {
     "username": "${DB_USER}",
     "password": "${DB_PASSWORD}",
     "database": "${DB_NAME}_prod",
     "host": "${DB_HOST}",
-    "dialect": "postgres"
+    "dialect": "postgres",
+    "jwt_secret": "${JWT_SECRET}"
   }
 }

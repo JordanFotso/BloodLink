@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
+const authRoutes = require('./authRoutes');
 const medecinRoutes = require('./medecinRoutes');
 const donneurRoutes = require('./donneurRoutes');
 const banqueDeSangRoutes = require('./banqueDeSangRoutes');
@@ -8,6 +9,7 @@ const stockSangRoutes = require('./stockSangRoutes');
 const demandeRoutes = require('./demandeRoutes');
 const notificationRoutes = require('./notificationRoutes');
 
+router.use('/auth', authRoutes);
 router.use('/medecins', medecinRoutes);
 router.use('/donneurs', donneurRoutes);
 router.use('/banquesdesang', banqueDeSangRoutes);

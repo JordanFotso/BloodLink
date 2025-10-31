@@ -4,7 +4,9 @@ const demandeController = {
   // Create a new Demande
   async create(req, res) {
     try {
-      const demande = await Demande.create(req.body);
+      // Assigner l'ID du médecin à partir de l'utilisateur authentifié
+      const demandeData = { ...req.body, id_medecin: req.user.id };
+      const demande = await Demande.create(demandeData);
       return res.status(201).json(demande);
     } catch (error) {
       return res.status(400).json({ error: error.message });
