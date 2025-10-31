@@ -44,11 +44,11 @@ Cette liste de contrôle décrit les étapes nécessaires pour rendre le serveur
 
 ## 5. Authentification et Autorisation
 
-*   [ ] Implémenter l'enregistrement des utilisateurs (pour les Médecins)
-*   [ ] Implémenter la connexion des utilisateurs (pour les Médecins)
-*   [ ] Implémenter la génération et la validation de JWT
-*   [ ] Implémenter un middleware pour l'authentification (par exemple, `src/middlewares/auth.js`)
-*   [ ] Implémenter un middleware d'autorisation (par exemple, contrôle d'accès basé sur les rôles)
+*   [x] Implémenter l'enregistrement des utilisateurs (pour les Médecins et Donneurs)
+*   [x] Implémenter la connexion des utilisateurs (pour les Médecins et Donneurs)
+*   [x] Implémenter la génération et la validation de JWT
+*   [x] Implémenter un middleware pour l'authentification (par exemple, `src/middlewares/auth.js`)
+*   [x] Implémenter un middleware d'autorisation (par exemple, contrôle d'accès basé sur les rôles)
 *   [ ] Intégrer l'authentification Google OAuth (en utilisant `GOOGLE_CLIENT_ID`)
 
 ## 6. Gestion des Erreurs

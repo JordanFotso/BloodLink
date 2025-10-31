@@ -137,51 +137,114 @@ L'API fournit des opérations CRUD (Créer, Lire, Mettre à jour, Supprimer) com
 
 ## Points d'Accès API (Endpoints)
 
-*(Note : Les routes ne sont pas encore définies dans `src/routes/`. Cette section sera mise à jour une fois les routes implémentées.)*
+L'API est préfixée par `/api`.
 
-Chaque ressource (Medecin, Donneur, BanqueDeSang, StockSang, Demande, Notification) exposera généralement les points d'accès CRUD suivants :
+### Authentification
 
-### Médecins
-*   `POST /api/medecins` - Créer un nouveau médecin
-*   `GET /api/medecins` - Obtenir tous les médecins
-*   `GET /api/medecins/:id` - Obtenir un médecin par ID
-*   `PUT /api/medecins/:id` - Mettre à jour un médecin par ID
-*   `DELETE /api/medecins/:id` - Supprimer un médecin par ID
+Ce sont les points d'accès pour gérer l'inscription et la connexion des utilisateurs.
 
-### Donneurs
-*   `POST /api/donneurs` - Créer un nouveau donneur
-*   `GET /api/donneurs` - Obtenir tous les donneurs
-*   `GET /api/donneurs/:id` - Obtenir un donneur par ID
-*   `PUT /api/donneurs/:id` - Mettre à jour un donneur par ID
-*   `DELETE /api/donneurs/:id` - Supprimer un donneur par ID
+#### Inscription
 
-### Banques de Sang
-*   `POST /api/banquesdesang` - Créer une nouvelle banque de sang
-*   `GET /api/banquesdesang` - Obtenir toutes les banques de sang
-*   `GET /api/banquesdesang/:id` - Obtenir une banque de sang par ID
-*   `PUT /api/banquesdesang/:id` - Mettre à jour une banque de sang par ID
-*   `DELETE /api/banquesdesang/:id` - Supprimer une banque de sang par ID
+*   **Route :** `POST /api/auth/signup`
+*   **Description :** Crée un nouvel utilisateur (médecin ou donneur). Retourne un token JWT pour une connexion immédiate.
+*   **Corps de la requête :**
+    *   `nom` (string, requis) : Nom complet de l'utilisateur.
+    *   `email` (string, requis) : Adresse email unique.
+    *   `password` (string, requis) : Mot de passe (sera haché).
+    *   `role` (string, requis) : Doit être `"medecin"` ou `"donneur"`.
+    *   `groupe_sanguin` (string, requis si `role` est `donneur`) : Groupe sanguin (ex: "A+", "O-").
+    *   `localisation` (string, requis si `role` est `donneur`) : Localisation de l'utilisateur.
 
-### Stock de Sang
-*   `POST /api/stocksang` - Créer une nouvelle entrée de stock de sang
-*   `GET /api/stocksang` - Obtenir toutes les entrées de stock de sang
-*   `GET /api/stocksang/:id` - Obtenir une entrée de stock de sang par ID
-*   `PUT /api/stocksang/:id` - Mettre à jour une entrée de stock de sang par ID
-*   `DELETE /api/stocksang/:id` - Supprimer une entrée de stock de sang par ID
+*   **Exemple de requête (Médecin) :**
+    ```json
+    {
+      "nom": "Dr. Marie Curie",
+      "email": "marie.curie@hopital.com",
+      "password": "password123",
+      "role": "medecin"
+    }
+    ```
 
-### Demandes
-*   `POST /api/demandes` - Créer une nouvelle demande de sang
-*   `GET /api/demandes` - Obtenir toutes les demandes de sang
-*   `GET /api/demandes/:id` - Obtenir une demande de sang par ID
-*   `PUT /api/demandes/:id` - Mettre à jour une demande de sang par ID
-*   `DELETE /api/demandes/:id` - Supprimer une demande de sang par ID
+*   **Exemple de requête (Donneur) :**
+    ```json
+    {
+      "nom": "Louis Pasteur",
+      "email": "louis.pasteur@institut.com",
+      "password": "password123",
+      "role": "donneur",
+      "groupe_sanguin": "O+",
+      "localisation": "Paris"
+    }
+    ```
 
-### Notifications
-*   `POST /api/notifications` - Créer une nouvelle notification
-*   `GET /api/notifications` - Obtenir toutes les notifications
-*   `GET /api/notifications/:id` - Obtenir une notification par ID
-*   `PUT /api/notifications/:id` - Mettre à jour une notification par ID
-*   `DELETE /api/notifications/:id` - Supprimer une notification par ID
+*   **Réponse en cas de succès (201 Created) :**
+    ```json
+    {
+      "success": true,
+      "token": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    }
+    ```
+
+#### Connexion
+
+*   **Route :** `POST /api/auth/login`
+*   **Description :** Connecte un utilisateur existant et retourne un token JWT.
+*   **Corps de la requête :**
+    *   `email` (string, requis) : Adresse email de l'utilisateur.
+    *   `password` (string, requis) : Mot de passe de l'utilisateur.
+    *   `role` (string, requis) : `"medecin"` ou `"donneur"`.
+
+*   **Exemple de requête :**
+    ```json
+    {
+      "email": "marie.curie@hopital.com",
+      "password": "password123",
+      "role": "medecin"
+    }
+    ```
+
+*   **Réponse en cas de succès (200 OK) :**
+    ```json
+    {
+      "success": true,
+      "token": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    }
+    ```
+
+### Effectuer des Requêtes Authentifiées
+
+Pour accéder aux routes protégées, vous devez inclure le token JWT obtenu lors de la connexion ou de l'inscription dans l'en-tête `Authorization` de vos requêtes.
+
+```
+Authorization: Bearer <votre_token_jwt>
+```
+
+### Routes Protégées (CRUD)
+
+La création des utilisateurs (`Médecin`, `Donneur`) se fait désormais via la route `POST /api/auth/signup`. Les autres opérations CRUD nécessitent une authentification.
+
+#### Demandes
+*Toutes ces routes nécessitent une authentification.*
+*   `POST /api/demandes` - Créer une nouvelle demande de sang (rôle `medecin` requis).
+*   `GET /api/demandes` - Obtenir toutes les demandes de sang (accessible à tous les rôles).
+*   `GET /api/demandes/:id` - Obtenir une demande de sang par ID (accessible à tous les rôles).
+*   `PUT /api/demandes/:id` - Mettre à jour une demande de sang par ID (rôle `medecin` requis).
+*   `DELETE /api/demandes/:id` - Supprimer une demande de sang par ID (rôle `medecin` requis).
+
+#### Autres Ressources (Médecins, Donneurs, etc.)
+*Les routes ci-dessous sont des exemples et doivent être sécurisées de la même manière que les demandes.*
+
+*   `GET /api/medecins` - Obtenir tous les médecins.
+*   `GET /api/medecins/:id` - Obtenir un médecin par ID.
+*   `PUT /api/medecins/:id` - Mettre à jour un médecin par ID.
+*   `DELETE /api/medecins/:id` - Supprimer un médecin par ID.
+
+*   `GET /api/donneurs` - Obtenir tous les donneurs.
+*   `GET /api/donneurs/:id` - Obtenir un donneur par ID.
+*   `PUT /api/donneurs/:id` - Mettre à jour un donneur par ID.
+*   `DELETE /api/donneurs/:id` - Supprimer un donneur par ID.
+
+*(Les sections pour Banques de Sang, Stock de Sang, et Notifications suivent le même modèle).*
 
 ## Variables d'Environnement
 
