@@ -1,4 +1,3 @@
-,
 const request = require('supertest');
 const express = require('express');
 const medecinRoutes = require('../src/routes/medecinRoutes');

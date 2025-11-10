@@ -59,11 +59,11 @@ describe('Auth Endpoints', () => {
   });
 
   describe('POST /api/auth/signup', () => {
-    it('devrait inscrire un nouveau médecin et retourner un token', async () => {
+    it('devrait inscrire un nouveau médecin et retourner un message de succès', async () => {
       const res = await request(app)
         .post('/api/auth/signup')
         .send({
-          nom: 'Nouveau Medecin',
+          name: 'Nouveau Medecin',
           email: 'nouveau.medecin@test.com',
           password: 'newpassword123',
           role: 'medecin'
@@ -71,14 +71,16 @@ describe('Auth Endpoints', () => {
       
       expect(res.statusCode).toBe(201);
       expect(res.body.success).toBe(true);
-      expect(res.body.token).toMatch(/^Bearer\s[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$/);
+      expect(res.body.message).toBe('Inscription réussie. Veuillez vous connecter.');
+      expect(res.body.user).toBeDefined();
+      expect(res.body.user.email).toBe('nouveau.medecin@test.com');
     });
 
-    it('devrait inscrire un nouveau donneur et retourner un token', async () => {
+    it('devrait inscrire un nouveau donneur et retourner un message de succès', async () => {
         const res = await request(app)
           .post('/api/auth/signup')
           .send({
-            nom: 'Nouveau Donneur',
+            name: 'Nouveau Donneur',
             email: 'nouveau.donneur@test.com',
             password: 'newpassword123',
             role: 'donneur',
@@ -88,14 +90,16 @@ describe('Auth Endpoints', () => {
         
         expect(res.statusCode).toBe(201);
         expect(res.body.success).toBe(true);
-        expect(res.body.token).toBeDefined();
+        expect(res.body.message).toBe('Inscription réussie. Veuillez vous connecter.');
+        expect(res.body.user).toBeDefined();
+        expect(res.body.user.email).toBe('nouveau.donneur@test.com');
       });
 
     it('devrait retourner une erreur 400 si l\'email existe déjà', async () => {
         const res = await request(app)
           .post('/api/auth/signup')
           .send({
-            nom: 'Autre Medecin',
+            name: 'Autre Medecin',
             email: 'medecin@test.com', // Email déjà utilisé
             password: 'password123',
             role: 'medecin'
@@ -109,7 +113,7 @@ describe('Auth Endpoints', () => {
         const res = await request(app)
           .post('/api/auth/signup')
           .send({
-            nom: 'Incomplet',
+            name: 'Incomplet',
             email: 'incomplet@test.com',
             // Mot de passe manquant
             role: 'medecin'
@@ -119,6 +123,48 @@ describe('Auth Endpoints', () => {
         expect(res.body.message).toBe('Nom, email, mot de passe et rôle sont requis.');
     });
   });
+
+  describe('POST /api/auth/login', () => {
+    it('devrait connecter un utilisateur et retourner un token et les infos utilisateur', async () => {
+      const res = await request(app)
+        .post('/api/auth/login')
+        .send({
+          email: 'medecin@test.com',
+          password: 'password123',
+        });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.token).toBeDefined();
+      expect(res.body.user).toBeDefined();
+      expect(res.body.user.email).toBe('medecin@test.com');
+      expect(res.body.user.role).toBe('medecin');
+    });
+
+    it('devrait retourner 401 pour un email ou mot de passe incorrect', async () => {
+      const res = await request(app)
+        .post('/api/auth/login')
+        .send({
+          email: 'medecin@test.com',
+          password: 'wrongpassword',
+        });
+
+      expect(res.statusCode).toBe(401);
+      expect(res.body.message).toBe('Email ou mot de passe incorrect.');
+    });
+
+    it('devrait retourner 400 si des champs sont manquants', async () => {
+      const res = await request(app)
+        .post('/api/auth/login')
+        .send({
+          email: 'medecin@test.com',
+        });
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.message).toBe('Email et mot de passe sont requis.');
+    });
+  });
+
 
   describe('Auth Middleware', () => {
     it('devrait autoriser l\'accès avec un token valide', async () => {
