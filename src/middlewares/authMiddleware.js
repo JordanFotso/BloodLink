@@ -26,7 +26,7 @@ exports.protect = async (req, res, next) => {
 
       next();
     } catch (error) {
-      console.error(error);
+      console.error('Middleware Protect Error:', error);
       return res.status(401).json({ message: 'Non autorisé, token invalide.' });
     }
   }

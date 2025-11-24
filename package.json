@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
-    "test": "DB_USER=user DB_PASSWORD=password DB_NAME=bloodlink_db DB_HOST=localhost DB_PORT=5433 ./node_modules/.bin/jest --verbose",
+    "test": "NODE_ENV=test DB_USER=user DB_PASSWORD=password DB_NAME=bloodlink_db DB_HOST=localhost DB_PORT=5433 JWT_SECRET=supersecretkey ./node_modules/.bin/jest --verbose",
     "test:integration": "jest --config jest.config.js",
     "start": "node server.js"
   },

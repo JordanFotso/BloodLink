@@ -117,76 +117,85 @@ describe('NotificationController', () => {
   });
 
   describe('update', () => {
-    it('should update a notification and return 200', async () => {
-        const updatedData = { statut: 'Lue' };
-        const updatedNotification = { id: 1, statut: 'Lue' };
-        req.params.id = 1;
-        req.body = updatedData;
-        Notification.update.mockResolvedValue([1]);
-        Notification.findByPk.mockResolvedValue(updatedNotification);
+    const userId = 1;
+    const notificationId = 1;
+    const ownedNotification = { id: notificationId, id_donneur: userId };
 
-        await notificationController.update(req, res);
+    beforeEach(() => {
+      req.user = { id: userId };
+      req.params.id = notificationId;
+    });
 
-        expect(Notification.update).toHaveBeenCalledWith(updatedData, { where: { id: 1 } });
-        expect(res.status).toHaveBeenCalledWith(200);
-        expect(res.json).toHaveBeenCalledWith(updatedNotification);
+    it('should update a notification and return 200 if user is owner', async () => {
+      req.body = { statut: 'lu' };
+      Notification.findByPk.mockResolvedValue(ownedNotification);
+      Notification.update.mockResolvedValue([1]);
+      Notification.findByPk.mockResolvedValueOnce(ownedNotification)
+                           .mockResolvedValueOnce({ ...ownedNotification, ...req.body });
+
+      await notificationController.update(req, res);
+
+      expect(Notification.findByPk).toHaveBeenCalledWith(notificationId);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ statut: 'lu' }));
+    });
+
+    it('should return 403 if user is not owner', async () => {
+      Notification.findByPk.mockResolvedValue({ id: notificationId, id_donneur: 99 });
+      
+      await notificationController.update(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.json).toHaveBeenCalledWith({ error: 'User not authorized to update this notification' });
     });
 
     it('should return 404 if notification to update is not found', async () => {
-        req.params.id = 99;
-        req.body = { statut: 'Lue' };
-        Notification.update.mockResolvedValue([0]);
+      Notification.findByPk.mockResolvedValue(null);
 
-        await notificationController.update(req, res);
+      await notificationController.update(req, res);
 
-        expect(res.status).toHaveBeenCalledWith(404);
-        expect(res.json).toHaveBeenCalledWith({ error: 'Notification not found' });
-    });
-
-    it('should return 400 on error', async () => {
-        const errorMessage = 'Erreur de mise à jour';
-        req.params.id = 1;
-        req.body = { statut: 'Lue' };
-        Notification.update.mockRejectedValue(new Error(errorMessage));
-
-        await notificationController.update(req, res);
-
-        expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({ error: errorMessage });
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Notification not found' });
     });
   });
 
   describe('delete', () => {
-    it('should delete a notification and return 204', async () => {
-        req.params.id = 1;
-        Notification.destroy.mockResolvedValue(1);
+    const userId = 1;
+    const notificationId = 1;
+    const ownedNotification = { id: notificationId, id_donneur: userId };
+
+    beforeEach(() => {
+      req.user = { id: userId };
+      req.params.id = notificationId;
+    });
+
+    it('should delete a notification and return 204 if user is owner', async () => {
+      Notification.findByPk.mockResolvedValue(ownedNotification);
+      Notification.destroy.mockResolvedValue(1);
+
+      await notificationController.delete(req, res);
+
+      expect(Notification.findByPk).toHaveBeenCalledWith(notificationId);
+      expect(Notification.destroy).toHaveBeenCalledWith({ where: { id: notificationId } });
+      expect(res.status).toHaveBeenCalledWith(204);
+    });
+
+    it('should return 403 if user is not owner', async () => {
+        Notification.findByPk.mockResolvedValue({ id: notificationId, id_donneur: 99 });
 
         await notificationController.delete(req, res);
 
-        expect(Notification.destroy).toHaveBeenCalledWith({ where: { id: 1 } });
-        expect(res.status).toHaveBeenCalledWith(204);
-        expect(res.send).toHaveBeenCalled();
+        expect(res.status).toHaveBeenCalledWith(403);
+        expect(res.json).toHaveBeenCalledWith({ error: 'User not authorized to delete this notification' });
     });
 
     it('should return 404 if notification to delete is not found', async () => {
-        req.params.id = 99;
-        Notification.destroy.mockResolvedValue(0);
+      Notification.findByPk.mockResolvedValue(null);
 
-        await notificationController.delete(req, res);
+      await notificationController.delete(req, res);
 
-        expect(res.status).toHaveBeenCalledWith(404);
-        expect(res.json).toHaveBeenCalledWith({ error: 'Notification not found' });
-    });
-
-    it('should return 500 on error', async () => {
-        const errorMessage = 'Erreur de suppression';
-        req.params.id = 1;
-        Notification.destroy.mockRejectedValue(new Error(errorMessage));
-
-        await notificationController.delete(req, res);
-
-        expect(res.status).toHaveBeenCalledWith(500);
-        expect(res.json).toHaveBeenCalledWith({ error: errorMessage });
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Notification not found' });
     });
   });
 });

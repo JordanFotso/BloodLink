@@ -1,5 +1,5 @@
 const demandeController = require('../src/controllers/demandeController');
-const { Demande, Medecin } = require('../src/models');
+const { Demande, Medecin, Donneur, Notification } = require('../src/models');
 
 jest.mock('../src/models', () => ({
   Demande: {
@@ -10,6 +10,12 @@ jest.mock('../src/models', () => ({
     destroy: jest.fn(),
   },
   Medecin: {},
+  Donneur: {
+    findAll: jest.fn(),
+  },
+  Notification: {
+    bulkCreate: jest.fn(),
+  },
 }));
 
 describe('DemandeController', () => {
@@ -19,6 +25,7 @@ describe('DemandeController', () => {
     req = {
       body: {},
       params: {},
+      user: { id: 1, nom: 'Test Doctor' } // Simuler l'utilisateur authentifié par défaut
     };
     res = {
       status: jest.fn().mockReturnThis(),
@@ -32,19 +39,48 @@ describe('DemandeController', () => {
   });
 
   describe('create', () => {
-    it('should create a new demande and return 201', async () => {
-      const demandeData = { groupe_sanguin: 'A+', quantite: 2, urgence: 'Haute', statut: 'En attente' };
-      const medecinId = 1;
+    it('should create a new demande, notify donors, and return 201', async () => {
+      const demandeData = { groupe_sanguin: 'A+', quantite: 2, urgence: 'haute' };
       req.body = demandeData;
-      req.user = { id: medecinId }; // Simuler l'utilisateur authentifié
 
-      const createdDemande = { id: 1, ...demandeData, id_medecin: medecinId };
+      const createdDemande = { id: 1, ...demandeData, id_medecin: req.user.id, statut: 'active' };
+      const mockDonors = [{ id: 10 }, { id: 11 }];
+
       Demande.create.mockResolvedValue(createdDemande);
+      Donneur.findAll.mockResolvedValue(mockDonors);
+      Notification.bulkCreate.mockResolvedValue({});
 
       await demandeController.create(req, res);
 
-      // Vérifier que l'ID du médecin vient de req.user
-      expect(Demande.create).toHaveBeenCalledWith({ ...demandeData, id_medecin: medecinId });
+      // 1. Check Demande creation
+      expect(Demande.create).toHaveBeenCalledWith({
+        ...demandeData,
+        id_medecin: req.user.id,
+        statut: 'active',
+      });
+
+      // 2. Check that we searched for donors
+      expect(Donneur.findAll).toHaveBeenCalledWith({
+        where: { groupe_sanguin: demandeData.groupe_sanguin }
+      });
+      
+      // 3. Check that notifications were created
+      expect(Notification.bulkCreate).toHaveBeenCalledWith([
+        {
+          id_donneur: mockDonors[0].id,
+          id_demande: createdDemande.id,
+          message: `Nouvelle demande de sang pour le groupe ${createdDemande.groupe_sanguin} par ${req.user.nom}.`,
+          statut: 'non lu'
+        },
+        {
+          id_donneur: mockDonors[1].id,
+          id_demande: createdDemande.id,
+          message: `Nouvelle demande de sang pour le groupe ${createdDemande.groupe_sanguin} par ${req.user.nom}.`,
+          statut: 'non lu'
+        }
+      ]);
+
+      // 4. Check response
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith(createdDemande);
     });
@@ -52,7 +88,6 @@ describe('DemandeController', () => {
     it('should return 400 on error', async () => {
       const errorMessage = 'Erreur de création';
       req.body = { groupe_sanguin: 'A+' };
-      req.user = { id: 1 }; // Simuler l'utilisateur authentifié
       Demande.create.mockRejectedValue(new Error(errorMessage));
 
       await demandeController.create(req, res);
@@ -62,6 +97,7 @@ describe('DemandeController', () => {
     });
   });
 
+  // ... (le reste des tests reste inchangé) ...
   describe('getAll', () => {
     it('should return all demandes and status 200', async () => {
       const demandes = [{ id: 1, groupe_sanguin: 'A+' }, { id: 2, groupe_sanguin: 'B-' }];
@@ -193,4 +229,44 @@ describe('DemandeController', () => {
         expect(res.json).toHaveBeenCalledWith({ error: errorMessage });
     });
   });
+
+  describe('getMyDemandes', () => {
+    it('should return all demands for the logged-in doctor', async () => {
+      const doctorId = 1;
+      const doctorDemands = [{ id: 1, id_medecin: doctorId, groupe_sanguin: 'O+' }];
+      req.user = { id: doctorId, role: 'medecin' };
+      Demande.findAll.mockResolvedValue(doctorDemands);
+
+      await demandeController.getMyDemandes(req, res);
+
+      expect(Demande.findAll).toHaveBeenCalledWith({
+        where: { id_medecin: doctorId },
+        include: [{ model: Medecin }],
+        order: [['id', 'DESC']]
+      });
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(doctorDemands);
+    });
+
+    it('should return 403 if user is not a medecin', async () => {
+      req.user = { id: 2, role: 'donneur' };
+
+      await demandeController.getMyDemandes(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Accès refusé. Seuls les médecins peuvent voir leurs propres demandes.' });
+    });
+
+    it('should return 500 on error', async () => {
+      const errorMessage = 'Erreur serveur';
+      req.user = { id: 1, role: 'medecin' };
+      Demande.findAll.mockRejectedValue(new Error(errorMessage));
+
+      await demandeController.getMyDemandes(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: errorMessage });
+    });
+  });
 });
+
